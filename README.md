@@ -33,7 +33,8 @@ Este framework foi desenvolvido para automatizar testes de APIs REST, utilizando
 - **Java 11** - Linguagem de programação
 - **Maven** - Gerenciador de dependências e build
 - **REST Assured 5.4.0** - Biblioteca para testes de API REST
-- **JUnit 5** - Framework de testes
+- **JUnit 5.10.2** - Framework de testes
+- **Jackson Databind 2.17.2** - Serialização de objetos Java para JSON
 - **Hamcrest** - Biblioteca de matchers para assertions
 
 ## 📋 Pré-requisitos
@@ -92,7 +93,9 @@ rest-assured-test/
 │           └── org/
 │               └── example/
 │                   ├── BaseTest.java          # Classe base para configurações
-│                   └── Usuarios.java          # Testes de API de usuários
+│                   ├── Usuarios.java          # Testes de API de usuários
+│                   └── model/
+│                       └── UsuarioModel.java  # Modelo para serialização do usuário
 ├── target/                                    # Arquivos compilados (gerado automaticamente)
 ├── pom.xml                                    # Configuração do Maven
 ├── .gitignore                                 # Arquivos ignorados pelo Git
@@ -119,8 +122,8 @@ mvn test
 # Executar apenas a classe Usuarios
 mvn test -Dtest=Usuarios
 
-# Executar um teste específico
-mvn test -Dtest=Usuarios#cadastrarUsuario
+# Executar um teste específico (método)
+mvn test -Dtest=Usuarios#deveCadastrarUsuarioComSucesso
 ```
 
 ### Executar com Relatório
@@ -136,17 +139,18 @@ mvn clean test
 ```java
 @Test
 @Order(1)
-public void cadastrarUsuario() {
-    String userJson = "{"
-            + "\"nome\": \"QA Teste\","
-            + "\"email\": \"teste@exemplo.com\","
-            + "\"password\": \"123456\","
-            + "\"administrador\": \"true\""
-            + "}";
+@DisplayName("Deve cadastrar um novo usuário com sucesso")
+public void deveCadastrarUsuarioComSucesso() {
+    UsuarioModel usuario = new UsuarioModel(
+            "QA Teste",
+            "qa." + System.currentTimeMillis() + "@teste.com",
+            "123456",
+            "true"
+    );
 
     Response response = given()
-            .header("Content-Type", "application/json")
-            .body(userJson)
+            .contentType("application/json")
+            .body(usuario)
             .when()
             .post("/usuarios");
 
@@ -182,16 +186,28 @@ mvn surefire-report:report
 
 ## 🔧 Configurações
 
-### Base URI
+### Base URI e Request Specification
 
-A URL base da API está configurada na classe `BaseTest`:
+A URL base e a especificação de requisição padrão são configuradas na classe `BaseTest`:
 
 ```java
 @BeforeAll
 public static void setup() {
     RestAssured.baseURI = "https://serverest.dev";
+
+    requestSpec = new RequestSpecBuilder()
+            .setBaseUri(RestAssured.baseURI)
+            .setContentType("application/json")
+            .log(LogDetail.ALL)
+            .build();
+
+    RestAssured.requestSpecification = requestSpec;
 }
 ```
+
+### Logs de Requisição/Resposta
+
+Os testes fazem log detalhado das requisições e respostas (`LogDetail.ALL`), o que ajuda na depuração.
 
 ### Headers Padrão
 
@@ -216,8 +232,13 @@ Os testes utilizam headers padrão para requisições JSON:
    - Confirme se a API está online
 
 3. **Dependências Maven**
+
    - Execute `mvn clean install` para baixar dependências
    - Verifique sua conexão com o Maven Central
+
+4. **Erro ao serializar JSON**
+   - Verifique se o `UsuarioModel` possui construtor vazio e getters/setters
+   - Confirme a dependência `jackson-databind` no `pom.xml`
 
 ## 🤝 Contribuição
 

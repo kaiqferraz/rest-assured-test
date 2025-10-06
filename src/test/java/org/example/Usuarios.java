@@ -1,84 +1,98 @@
 package org.example;
 
 import io.restassured.response.Response;
+import org.example.model.UsuarioModel;
 import org.junit.jupiter.api.*;
-
+import java.util.*;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class Usuarios extends BaseTest {
 
-    private static String usuarioId;
+        private static String usuarioId;
 
-    @Test
-    @Order(1)
-    public void cadastrarUsuario() {
-        String userJson = "{"
-                + "\"nome\": \"QA Teste\","
-                + "\"email\": \"kaique.teste" + System.currentTimeMillis() + "@gmail.com\","
-                + "\"password\": \"123456\","
-                + "\"administrador\": \"true\""
-                + "}";
+        @Test
+        @Order(1)
+        @DisplayName("Deve cadastrar um novo usuário com sucesso")
+        public void deveCadastrarUsuarioComSucesso() {
+                UsuarioModel usuario = new UsuarioModel(
+                                "QA Teste",
+                                "qa." + System.currentTimeMillis() + "@teste.com",
+                                "123456",
+                                "true");
 
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(userJson)
-                .when()
-                .post("/usuarios");
+                Response response = given()
+                                .contentType("application/json")
+                                .body(usuario)
+                                .when()
+                                .post("/usuarios");
 
-        response.then()
-                .statusCode(201)
-                .body("message", equalTo("Cadastro realizado com sucesso"));
+                response.then()
+                                .statusCode(201)
+                                .body("message", equalTo("Cadastro realizado com sucesso"))
+                                .log().all();
 
-        // Capturar o ID do usuário criado
-        usuarioId = response.jsonPath().getString("_id");
-        System.out.println("Usuário cadastrado com ID: " + usuarioId);
-    }
+                usuarioId = response.jsonPath().getString("_id"); // <-- importante
+        }
 
-    @Test
-    @Order(2)
-    public void buscarUsuarioPorID() {
-        Response response = given().when().get("/usuarios/" + usuarioId);
-        response.then().statusCode(200);
-        System.out.println(response.getBody().prettyPrint());
-    }
+        @Test
+        @Order(2)
+        @DisplayName("Deve buscar o usuário pelo ID")
+        public void deveBuscarUsuarioPorID() {
+                given()
+                                .when()
+                                .get("/usuarios/" + usuarioId)
+                                .then()
+                                .statusCode(200)
+                                .body("_id", equalTo(usuarioId));
+        }
 
-    @Test
-    @Order(3)
-    public void listarUsuariosCadastrados() {
-        Response response = given().when().get("/usuarios");
-        response.then().statusCode(200);
-        System.out.println(response.getBody().prettyPrint());
-    }
+        @Test
+        @Order(3)
+        @DisplayName("Deve listar todos os usuários cadastrados")
+        public void deveListarUsuarios() {
+                Response response = given()
+                                .when()
+                                .get("/usuarios");
 
-    @Test
-    @Order(4)
-    public void editarUsuario() {
-        String userJson = "{"
-                + "\"nome\": \"QA Teste EDITADO\","
-                + "\"email\": \"kaique.010255" + System.currentTimeMillis() + "@teste.com\","
-                + "\"password\": \"654321\","
-                + "\"administrador\": \"true\""
-                + "}";
+                response.then()
+                                .statusCode(200)
+                                .body("usuarios", notNullValue())
+                                .log().ifValidationFails();
 
-        Response response = given()
-                .header("Content-Type", "application/json")
-                .body(userJson)
-                .when()
-                .put("/usuarios/" + usuarioId);
+                System.out.println("Lista de usuários:");
+                response.getBody().prettyPrint();
+        }
 
-        response.then()
-                .statusCode(200)
-                .body("message", equalTo("Registro alterado com sucesso"));
-        System.out.println("Usuário com ID: " + usuarioId + " alterado com sucesso");
-    }
+        @Test
+        @Order(4)
+        @DisplayName("Deve editar o usuário com sucesso")
+        public void deveEditarUsuario() {
+                Map<String, Object> user = new HashMap<>();
+                user.put("nome", "QA Teste Editado");
+                user.put("email", "qa.editado" + System.currentTimeMillis() + "@teste.com");
+                user.put("password", "654321");
+                user.put("administrador", "true");
 
-    @Test
-    @Order(5)
-    public void excluirUsuario() {
-        Response response = given().when().delete("/usuarios/" + usuarioId);
-        response.then().statusCode(200);
-        System.out.println(response.getBody().prettyPrint());
-    }
+                given()
+                                .body(user)
+                                .when()
+                                .put("/usuarios/" + usuarioId)
+                                .then()
+                                .statusCode(200)
+                                .body("message", equalTo("Registro alterado com sucesso"));
+        }
+
+        @Test
+        @Order(5)
+        @DisplayName("Deve excluir o usuário com sucesso")
+        public void deveExcluirUsuario() {
+                given()
+                                .when()
+                                .delete("/usuarios/" + usuarioId)
+                                .then()
+                                .statusCode(200)
+                                .body("message", equalTo("Registro excluído com sucesso"));
+        }
 }
