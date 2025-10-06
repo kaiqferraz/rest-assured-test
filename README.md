@@ -257,14 +257,10 @@ Contribuições são bem-vindas! Para contribuir:
 - Mantenha a estrutura de pacotes organizada
 - Siga as convenções do Java
 
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
 ## 📞 Contato
 
-**Desenvolvedor**: Kaique
-**Email**: [seu-email@exemplo.com]
+**Desenvolvedor**: Kaique Ferraz
+**Email**: [kaiqueferraz97@gmail.com]
 
 ---
 
