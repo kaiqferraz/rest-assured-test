@@ -12,7 +12,7 @@ public class Usuarios extends BaseTest {
 
         private static String usuarioId;
 
-        @Test
+        @Test //CADASTRA (POST)
         @Order(1)
         @DisplayName("Deve cadastrar um novo usuário com sucesso")
         public void deveCadastrarUsuarioComSucesso() {
@@ -36,7 +36,7 @@ public class Usuarios extends BaseTest {
                 usuarioId = response.jsonPath().getString("_id"); // <-- importante
         }
 
-        @Test
+        @Test //BUSCA POR ID (GET)
         @Order(2)
         @DisplayName("Deve buscar o usuário pelo ID")
         public void deveBuscarUsuarioPorID() {
@@ -48,7 +48,7 @@ public class Usuarios extends BaseTest {
                                 .body("_id", equalTo(usuarioId));
         }
 
-        @Test
+        @Test //BUSCA TODOS IDS (GET)
         @Order(3)
         @DisplayName("Deve listar todos os usuários cadastrados")
         public void deveListarUsuarios() {
@@ -65,18 +65,18 @@ public class Usuarios extends BaseTest {
                 response.getBody().prettyPrint();
         }
 
-        @Test
+        @Test //EDITA (PUT)
         @Order(4)
         @DisplayName("Deve editar o usuário com sucesso")
         public void deveEditarUsuario() {
-                Map<String, Object> user = new HashMap<>();
-                user.put("nome", "QA Teste Editado");
-                user.put("email", "qa.editado" + System.currentTimeMillis() + "@teste.com");
-                user.put("password", "654321");
-                user.put("administrador", "true");
+                UsuarioModel usuario = new UsuarioModel(
+                        "QA Teste",
+                        "qa." + System.currentTimeMillis() + "@teste.com",
+                        "123456",
+                        "true");
 
                 given()
-                                .body(user)
+                                .body(usuario)
                                 .when()
                                 .put("/usuarios/" + usuarioId)
                                 .then()
@@ -84,7 +84,7 @@ public class Usuarios extends BaseTest {
                                 .body("message", equalTo("Registro alterado com sucesso"));
         }
 
-        @Test
+        @Test //DELETA (DELET)
         @Order(5)
         @DisplayName("Deve excluir o usuário com sucesso")
         public void deveExcluirUsuario() {
